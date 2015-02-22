@@ -8,7 +8,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "../map/Map.hpp"
-#include "../navigation/A*.hpp"
+#include "../navigation/AStar.hpp"
 
 class Application
 {

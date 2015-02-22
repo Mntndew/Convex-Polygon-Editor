@@ -15,7 +15,7 @@ void Application::initialize()
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 32;
 
-	m_window.create(sf::VideoMode(1280, 720), "A*", sf::Style::Close, settings);
+	m_window.create(sf::VideoMode(1600, 900), "L-System", sf::Style::Close, settings);
 
 	m_running = true;
 	m_active = true;
@@ -23,7 +23,6 @@ void Application::initialize()
 	m_mouse = false;
 
 	m_map = Map();
-
 	m_aStar = new AStar(m_map, sf::Vector2i(8, 3), sf::Vector2i(8, 13));
 }
 

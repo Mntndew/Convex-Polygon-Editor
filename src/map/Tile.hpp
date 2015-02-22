@@ -11,17 +11,13 @@ public:
 
 	Tile(const int type, const sf::Vector2i position) :
 		type(type),
-		position(position),
-		f(-1),
-		g(-1),
-		h(-1),
-		index(-1)
+		position(position)
 	{}
 
 	~Tile()
 	{}
 
-	int type, f, g, h, index;
+	int type;
 	sf::Vector2i position;
 };
 
