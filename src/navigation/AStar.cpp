@@ -13,42 +13,43 @@ AStar::AStar(Map& map, const sf::Vector2i& source, const sf::Vector2i& destinati
 void AStar::search()
 {
 	std::shared_ptr<AStar::Node> sourceNode(new AStar::Node(m_source, std::weak_ptr<AStar::Node>()));
-	m_nodes.push_back(sourceNode);
-	m_open.insert(std::make_pair<Key, std::weak_ptr<AStar::Node>>(Key({m_source.x, m_source.y}), std::weak_ptr<AStar::Node>(sourceNode)));
+	m_open.push_back(sourceNode);
+	m_nodes.insert(std::make_pair<Key, std::shared_ptr<AStar::Node>>(Key({m_source.x, m_source.y}), std::shared_ptr<AStar::Node>(sourceNode)));
 
 	sourceNode->h = heuristic(sourceNode->position);
 	sourceNode->f = sourceNode->h;
 
 	while (!m_open.empty())
 	{
-		std::shared_ptr<AStar::Node> selectedNode = m_nodes.back();
-		
-		auto open = m_open.find({selectedNode->position.x, selectedNode->position.y});
-		if (open != m_open.end())
-			m_open.erase(open);
+		std::shared_ptr<AStar::Node> selectedNode = m_open.back().lock();
 
-		m_closed.insert(std::make_pair<Key, std::weak_ptr<AStar::Node>>(Key({selectedNode->position.x, selectedNode->position.y}), std::weak_ptr<AStar::Node>(selectedNode)));
-		selectedNode->open = false;
-		selectedNode->closed = true;
-
-		m_nodes.reserve(8 - m_reserved);
-		m_reserved = 8;
-
-		if (checkAdjacentNodes(selectedNode))
+		if (selectedNode)
 		{
-			constructPath();
-			return;
-		}
+			m_open.pop_back();
+			selectedNode->open = false;
+			selectedNode->closed = true;
 
-		std::sort(m_nodes.begin(), m_nodes.end(), compare);
+			m_open.reserve(8 - m_reserved);
+			m_reserved = 8;
+
+			if (checkAdjacentNodes(selectedNode))
+			{
+				constructPath();
+				return;
+			}
+
+			std::sort(m_open.begin(), m_open.end(), compare);
+		}
+		else
+			return;
 	}
 }
 
 void AStar::constructPath()
 {
-	auto node = m_closed.find({m_destination.x, m_destination.y})->second;
+	auto node = m_nodes.find({m_destination.x, m_destination.y})->second;
 	
-	while (auto parent = node.lock()->parent.lock())
+	while (auto parent = node->parent.lock())
 	{
 		m_map.tiles[parent->position.x][parent->position.y].type = 6;
 		node = parent;
@@ -65,48 +66,42 @@ bool AStar::checkAdjacentNodes(const std::shared_ptr<AStar::Node> node)
 
 			if (m_map.tiles[position.x][position.y].type != 1 && !illegalDiagonal(node->position, position))
 			{
-				if (m_closed.find({position.x, position.y}) != m_closed.end())
+				auto it = m_nodes.find({position.x, position.y});
+				std::shared_ptr<Node> adjacent;
+
+				if (it != m_nodes.end() && it->second->closed)
 					continue;
-
-				std::shared_ptr<AStar::Node> adjacent;
-
+				
 				if (position == m_destination)
 				{
 					adjacent.reset(new Node(position, node));
-					m_nodes.push_back(adjacent);
-					m_closed.insert(std::make_pair<Key, std::shared_ptr<AStar::Node>&>(Key({position.x, position.y}), adjacent));
+					adjacent->open = false;
+					adjacent->closed = true;
+					m_nodes.insert(std::make_pair<Key, std::shared_ptr<AStar::Node>&>(Key({position.x, position.y}), adjacent));
 					return true;
 				}
 
-				auto it = m_open.find({position.x, position.y});
-
-				if (it == m_open.end())
+				if (it == m_nodes.end())
 				{
 					adjacent.reset(new Node(position, node));
 					adjacent->h = heuristic(adjacent->position);
 					adjacent->g = movementCost(position, node->position, node->g);
 					adjacent->f = adjacent->g + adjacent->h;
-					m_open.insert(std::make_pair<Key, std::shared_ptr<AStar::Node>&>(Key({adjacent->position.x, adjacent->position.y}), adjacent));
-					m_nodes.push_back(adjacent);
+					m_nodes.insert(std::make_pair<Key, std::shared_ptr<AStar::Node>&>(Key({position.x, position.y}), adjacent));
+					m_open.push_back(adjacent);
 					m_reserved--;
 				}
 				else
 				{
-					adjacent = it->second.lock();
-					
-					if (adjacent)
-					{
-						int g = movementCost(position, node->position, node->g);
+					adjacent = it->second;
+					int g = movementCost(position, node->position, node->g);
 
-						if (g < adjacent->g)
-						{
-							adjacent->parent = node;
-							adjacent->g = g;
-							adjacent->f = adjacent->g + adjacent->h;
-						}
+					if (g < adjacent->g)
+					{
+						adjacent->parent = node;
+						adjacent->g = g;
+						adjacent->f = adjacent->g + adjacent->h;
 					}
-					else
-						m_open.erase(it);
 				}
 			}
 		}
@@ -122,12 +117,12 @@ int AStar::movementCost(const sf::Vector2i& position, const sf::Vector2i& parent
 
 float AStar::heuristic(const sf::Vector2i& position) const
 {
-	return (std::pow(m_destination.x - position.x, 2) + std::pow(m_destination.y - position.y, 2));
+	return 0.5f*(std::pow(m_destination.x - position.x, 1) + std::pow(m_destination.y - position.y, 1));
 }
 
 bool AStar::illegalDiagonal(const sf::Vector2i& a, const sf::Vector2i& b) const
 {
-	if (a.x == b.x || a.y == b.y)
+	if (a.x == b.x || a.y == b.y) // Not a diagonal.
 		return false;
 
 	int x = a.x > b.x ? a.x:b.x;

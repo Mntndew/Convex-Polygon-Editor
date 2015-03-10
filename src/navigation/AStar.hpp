@@ -57,19 +57,21 @@ private:
 
 	Map& m_map;
 
-	// Used to store the nodes
-	std::vector<std::shared_ptr<Node>> m_nodes;
+	std::vector<std::weak_ptr<Node>> m_open;
+	std::unordered_map<Key, std::shared_ptr<Node>, Hasher> m_nodes;
+
 	short m_reserved;
-
-	// These two unordered maps are used to check if a node at a given position is closed or open.
-	std::unordered_map<Key, std::weak_ptr<Node>, Hasher> m_open;
-	std::unordered_map<Key, std::weak_ptr<Node>, Hasher> m_closed;
-
 	sf::Vector2i m_source, m_destination;
 
-	static bool compare(const std::shared_ptr<Node> a, const std::shared_ptr<Node> b)
+	static bool compare(const std::weak_ptr<Node> a, const std::weak_ptr<Node> b)
 	{
-		return a->f > b->f && b->open;
+		auto _a = a.lock();
+		auto _b = b.lock();
+
+		if (_a && _b)
+			return _a->f > _b->f && _b->open;
+		else
+			return false;
 	}
 
 	float heuristic(const sf::Vector2i& position) const;

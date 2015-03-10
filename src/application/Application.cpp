@@ -29,7 +29,8 @@ void Application::initialize()
 void Application::run()
 {
 	initialize();
-
+	return;
+	
 	sf::Clock dt;
 	sf::Time deltaTime;
 	sf::Time updateTime = sf::seconds(1.f/60.f);
