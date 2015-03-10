@@ -17,12 +17,15 @@ private:
 	{
 		std::weak_ptr<Node> parent;
 		float f, g, h;
+		bool open, closed;
 
 		sf::Vector2i position;
 
 		Node(const sf::Vector2i& position, std::weak_ptr<Node> parent) :
 			position(position),
-			parent(parent)
+			parent(parent),
+			open(true),
+			closed(false)
 		{}
 
 		bool operator==(const Node& node) const
@@ -53,29 +56,27 @@ private:
 	};
 
 	Map& m_map;
-	std::vector<std::shared_ptr<Node>> m_open;
-	std::unordered_map<Key, std::shared_ptr<Node>, Hasher> m_closed;
+
+	// Used to store the nodes
+	std::vector<std::shared_ptr<Node>> m_nodes;
+	short m_reserved;
+
+	// These two unordered maps are used to check if a node at a given position is closed or open.
+	std::unordered_map<Key, std::weak_ptr<Node>, Hasher> m_open;
+	std::unordered_map<Key, std::weak_ptr<Node>, Hasher> m_closed;
+
 	sf::Vector2i m_source, m_destination;
 
 	static bool compare(const std::shared_ptr<Node> a, const std::shared_ptr<Node> b)
 	{
-		return a->f > b->f;
+		return a->f > b->f && b->open;
 	}
 
-	void recalculate(std::shared_ptr<Node> node, const std::shared_ptr<Node> parent);
-
-	void calculateHeuristic(std::shared_ptr<Node> node);
-
+	float heuristic(const sf::Vector2i& position) const;
+	int movementCost(const sf::Vector2i& position, const sf::Vector2i& parentPosition, const int parentMovementCost) const;
 	bool illegalDiagonal(const sf::Vector2i& a, const sf::Vector2i& b) const;
-
-	bool inOpen(const sf::Vector2i& position) const;
-
-	std::shared_ptr<Node> getOpenNode(const sf::Vector2i& position);
-
 	bool checkAdjacentNodes(const std::shared_ptr<Node> node);
-
 	void constructPath();
-
 	void search();
 
 public:
