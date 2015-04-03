@@ -9,7 +9,9 @@ sfml-system
 sources = Split("""
 src/application/main.cpp
 src/application/Application.cpp
-src/navigation/AStar.cpp
+src/application/Math.cpp
+src/map/Map.cpp
+src/map/Quadtree.cpp
 """)
 
 Program(target = 'No-Motivation', source = sources, LIBS = libs, CXXFLAGS = "-std=c++11")
