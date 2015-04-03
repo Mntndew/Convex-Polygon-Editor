@@ -2,13 +2,21 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <fstream>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "Math.hpp"
 #include "../map/Map.hpp"
-#include "../navigation/AStar.hpp"
+
+struct Polygon
+{
+	math::Polygon polygon;
+	sf::ConvexShape shape;
+};
 
 class Application
 {
@@ -25,12 +33,17 @@ private:
 
 	bool m_running, m_active;
 
-	sf::RenderWindow m_window;
+	bool m_mouse;
+	int m_index;
+
+	math::Polygon m_polygon;
+	sf::ConvexShape m_shape;
+
+	std::vector<Polygon> m_polygons;
 
 	Map m_map;
 
-	bool m_space, m_mouse;
-
-	AStar* m_aStar;
+	sf::RenderWindow m_window;
+	sf::View m_view;
 };
 
