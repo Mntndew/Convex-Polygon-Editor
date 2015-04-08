@@ -12,11 +12,6 @@
 #include "Math.hpp"
 #include "../map/Map.hpp"
 
-struct Polygon
-{
-	math::Polygon polygon;
-	sf::ConvexShape shape;
-};
 
 class Application
 {
@@ -39,7 +34,7 @@ private:
 	math::Polygon m_polygon;
 	sf::ConvexShape m_shape;
 
-	std::vector<Polygon> m_polygons;
+	std::vector<math::Polygon> m_polygons;
 
 	Map m_map;
 

@@ -13,7 +13,7 @@ Map::~Map()
 
 void Map::addPolygon(const math::Polygon& polygon)
 {
-	m_quadtree->insert(std::shared_ptr<math::Polygon>(new math::Polygon(polygon)));
+	m_quadtree->insert(std::shared_ptr<math::Polygon>(new math::Polygon(polygon)), m_index);
 
 	sf::ConvexShape shape;
 	shape.setPointCount(polygon.getPointCount());
@@ -27,7 +27,7 @@ void Map::addPolygon(const math::Polygon& polygon)
 
 void Map::removePolygon(std::shared_ptr<math::Polygon> polygon)
 {
-	m_quadtree->remove(polygon);
+//	m_quadtree->remove(polygon);
 }
 
 std::shared_ptr<math::Polygon> Map::getPolygon(const sf::Vector2f& position)
@@ -41,5 +41,13 @@ void Map::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		target.draw(it->second, states);
 
 	m_quadtree->draw(target, states);
+}
+
+void Map::save() const
+{
+	std::ofstream file;
+	file.open("level");
+	std::vector<unsigned char> saved;
+	m_quadtree->save(file, saved);
 }
 

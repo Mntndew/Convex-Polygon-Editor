@@ -28,13 +28,13 @@ void Quadtree::update()
 		mergeChildren();
 }
 
-void Quadtree::insert(std::shared_ptr<math::Polygon> polygon)
+void Quadtree::insert(std::shared_ptr<math::Polygon> polygon, unsigned char index)
 {
 	if (!m_hasChildren)
 	{
-		if (std::find(m_polygons.begin(), m_polygons.end(), polygon) == m_polygons.end())
+		if (m_polygons.find(index) == m_polygons.end())
 		{
-			m_polygons.push_back(polygon);
+			m_polygons[index] = polygon;
 
 			if (m_level < MAX_LEVEL)
 				split();
@@ -44,15 +44,15 @@ void Quadtree::insert(std::shared_ptr<math::Polygon> polygon)
 	{
 		for (int i = 0; i < 4; ++i)
 			if (math::polygonIntersectsPolygon(m_children[i]->polygon, *polygon))
-				m_children[i]->insert(polygon);
+				m_children[i]->insert(polygon, index);
 	}
 }
 
-bool Quadtree::remove(std::shared_ptr<math::Polygon> polygon)
+bool Quadtree::remove(unsigned char index)
 {
 	if (!m_children[0])
 	{
-		auto it = std::find(m_polygons.begin(), m_polygons.end(), polygon);
+		auto it = m_polygons.find(index);
 		if (it != m_polygons.end())
 		{
 			m_polygons.erase(it);
@@ -65,7 +65,7 @@ bool Quadtree::remove(std::shared_ptr<math::Polygon> polygon)
 	{
 		for (int i = 0; i < 4; ++i)
 		{
-			if (m_children[i]->remove(polygon))
+			if (m_children[i]->remove(index))
 				return true;
 		}
 	}
@@ -87,12 +87,11 @@ void Quadtree::split()
 
 	for (int i = 0; i < 4; ++i)
 	{
-		for (int j = 0; j < m_polygons.size(); ++j)
-			if (math::polygonIntersectsPolygon(m_children[i]->polygon, *m_polygons[j]))
-				m_children[i]->insert(m_polygons[j]);
+		for (auto it = m_polygons.begin(); it != m_polygons.end(); ++it)
+			if (math::polygonIntersectsPolygon(m_children[i]->polygon, *it->second))
+				m_children[i]->insert(it->second, it->first);
 	}
 
-	m_level++;
 	m_polygons.clear();
 }
 
@@ -177,6 +176,29 @@ void Quadtree::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		shape.setPoint(3, sf::Vector2f(m_position.x, m_position.y + m_dimensions.y));
 
 		target.draw(shape, states);
+	}
+}
+
+void Quadtree::save(std::ofstream& file, std::vector<unsigned char>& saved) const
+{
+	if (m_hasChildren)
+	{
+		for (int i = 0; i < 4; ++i)
+			m_children[i]->save(file, saved);
+	}
+	else
+	{
+		for (auto it = m_polygons.begin(); it != m_polygons.end(); ++it)
+		{
+			if (std::find(saved.begin(), saved.end(), it->first) == saved.end())
+			{
+				file << "-\n";
+				for (int j = 0; j < it->second->getPointCount(); ++j)
+					file << it->second->getPoint(j).x << ':' << it->second->getPoint(j).y << '\n';
+
+				saved.push_back(it->first);
+			}
+		}
 	}
 }
 

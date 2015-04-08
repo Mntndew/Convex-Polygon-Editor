@@ -96,24 +96,13 @@ void Application::update(sf::Time & p_deltaTime)
 	{
 		m_index = 0;
 		m_map.addPolygon(m_polygon);
+		m_polygons.push_back(m_polygon);
 		m_polygon.clear();
 		m_shape.setPointCount(0);
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-	{
-		std::ofstream file;
-		file.open("level");
-
-		for (int i = 0; i < m_polygons.size(); ++i)
-		{
-			file << "-\n";
-			for (int j = 0; j < m_polygons[i].polygon.getPointCount(); ++j)
-			{
-				file << m_polygons[i].polygon.getPoint(j).x << ':' << m_polygons[i].polygon.getPoint(j).y << '\n';
-			}
-		}
-	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::O))
+		m_map.save();
 }
 
 void Application::render()

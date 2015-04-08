@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <fstream>
 
 #include <SFML/Graphics.hpp>
 
@@ -18,6 +19,8 @@ public:
 
 	std::shared_ptr<math::Polygon> getPolygon(const sf::Vector2f& position);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
+	void save() const;
 
 private:
 	unsigned int m_index;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include <SFML/Graphics.hpp>
 
@@ -21,12 +22,14 @@ public:
 
 	void update();
 
-	void insert(std::shared_ptr<math::Polygon> polygon);
-	bool remove(std::shared_ptr<math::Polygon> polygon);
+	void insert(std::shared_ptr<math::Polygon> polygon, unsigned char index);
+	bool remove(unsigned char index);
 
 	bool canMerge() const; // Checks itself and its siblings.
 	bool canMergeChildren() const;
 	bool empty() const;
+
+	void save(std::ofstream& file, std::vector<unsigned char>& saved) const;
 
 	math::Polygon polygon;
 
@@ -37,7 +40,7 @@ public:
 private:
 	std::shared_ptr<Quadtree> m_children[4];
 	std::weak_ptr<Quadtree> m_parent;
-	std::vector<std::shared_ptr<math::Polygon>> m_polygons;
+	std::map<unsigned char, std::shared_ptr<math::Polygon>> m_polygons;
 
 	void split();
 	void mergeChildren();
